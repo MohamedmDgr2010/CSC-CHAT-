@@ -64,6 +64,11 @@ private:
     }
 
 private slots:
+    void show(Qstring t){
+      if(t.emtpy())return;
+      QLabel* l=new QLabel(t);
+      contentLayout->addWidget(l);
+    }
     void onConditionMet() {
         std::string body = input->text().toStdString();
         if (body.empty()) return;
