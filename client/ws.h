@@ -16,7 +16,7 @@ string pri_key,ser_pub_key;
 void send(string payload,string to){
   ser_pub_key=crypto::load_key("ser_pub_key.pem");
   json msg=
-    {{"payload",crypto::encode(payload,ser_pub_key)},{"to",to}};
+    {{"payload",crypto::base64_encode(crypto::encode(payload,ser_pub_key))},{"to",to}};
   sock->send(msg.dump());
 }
 void input(){
@@ -69,6 +69,7 @@ sock->setUrl("ws://localhost:2024");
 sock->setOnMessageCallback([](const ix::WebSocketMessagePtr&msg){
   on_msg(msg);
 });
+
 
 sock->setExtraHeaders({{"jwt",jwt}});
 

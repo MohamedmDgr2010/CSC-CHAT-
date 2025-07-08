@@ -1,3 +1,4 @@
+#pragma once
 #include <mariadb/mysql.h>        // الاتصال، تنفيذ الاستعلامات
 #include <mariadb/mysqld_error.h> // رسائل الخطأ
 #include <vector>
@@ -6,10 +7,12 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
-#include "mail.h"
+
+
+
 using namespace std;
 
-mail::Mail *otps;
+
 namespace db{
   
   class DB{
@@ -19,7 +22,7 @@ namespace db{
       DB(string n) : name(n){}
       
   };
-  DB* users=new DB("users");
+  
   
   
  string sql_q(db::DB* d, string q, vector<string> params) {
@@ -124,46 +127,9 @@ namespace db{
     return result.str();
 }
 
-  bool is_there_user(string email) {
-    string result = sql_q(users, "SELECT email FROM accounts WHERE email = ?", {email});
-    
-    // إزالة نهاية السطر '\n' إن وجدت
-    result.erase(remove(result.begin(), result.end(), '\n'), result.end());
-
-    return result == email;
-}
-
-  bool check_otp(string code,string &email){
-    if(sql_q(users,"SELECT code FROM otp WHERE email = ?",{email})==code){
-        return true;
+  
       
-    }
-    else return false;
-  }
-  int login(json data) {
-    if (
-        !(data.contains("email")&&
-        data.contains("passwd"))
-    )return 400;
-    string q;
-        q = sql_q(users,"SELECT passwd FROM users WHERE email = ?", {data["email"]});
+  }// namespace db
 
 
-    if (q == data["passwd"]) {
-        return 200;  // تم تسجيل الدخول بنجاح
-    }
-
-    return 400;  // كلمة مرور خاطئة أو لا يوجد مستخدم
-}
-  int logup(json data){
-    if(data.contains("email")&&data.contains("name")&&data.contains("passwd")){
-      if(is_there_user(data["email"]))return 401;
-      string otp=genotp();
-      mail::send(otps,data["email"],"OTP code",otp);
-      return 201;
-      
-    }else return 400;
-  }
-
-}
 

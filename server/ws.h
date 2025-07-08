@@ -1,3 +1,4 @@
+#pragma once
 #include "../ws/server.h"
 #include <mayn/encode.h>
 #include <nlohmann/json.hpp>

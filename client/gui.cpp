@@ -8,19 +8,25 @@
 #include <QLineEdit>
 #include <QWidget>
 #include <string>
+#include <vector>
 #include "ws.h"
+#include <nlohmann/json.hpp>
 
-strcat User{
-  string id,name;
-  User(string i,string n=""):id(i),name(n){
-    
-  }
-}
+using namespace std;
+using json = nlohmann::json;
+
+// تعريف هيكل المستخدم
+struct User {
+    string id, name;
+    User(string i, string n = "") : id(i), name(n) {}
+};
+
+// نافذة الدردشة
 class ChatWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(std::string With,QWidget* parent = nullptr) : QMainWindow(parent) {
+    ChatWindow(std::string With, QWidget* parent = nullptr) : QMainWindow(parent) {
         setupUi(With);
     }
 
@@ -28,8 +34,9 @@ private:
     QVBoxLayout* contentLayout;
     QLineEdit* input;
     std::string With;
-    void setupUi(std::string w){
-        With=w;
+
+    void setupUi(std::string w) {
+        With = w;
         QWidget* centralWidget = new QWidget(this);
         QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
 
@@ -50,14 +57,14 @@ private:
 
         // --- التخطيط السفلي ---
         QHBoxLayout* bottomLayout = new QHBoxLayout;
-        input = new QLineEdit();  // حفظه كعضو في الكلاس
+        input = new QLineEdit();
         QPushButton* addButton = new QPushButton("Send");
         bottomLayout->addWidget(input);
         bottomLayout->addWidget(addButton);
         mainLayout->addLayout(bottomLayout);
 
         // --- الإجراء عند الضغط ---
-        connect(addButton, &QPushButton::clicked, this, &MainWindow::onConditionMet);
+        connect(addButton, &QPushButton::clicked, this, &ChatWindow::onConditionMet);
 
         centralWidget->setLayout(mainLayout);
         setCentralWidget(centralWidget);
@@ -74,18 +81,66 @@ private slots:
         if (body.empty()) return;
 
         QLabel* newLabel = new QLabel(QString::fromStdString(body));
-        newLabel->setStyleSheet("background:blue;");
+        QString c="blue";
+        
+        newLabel->setStyleSheet("background:"+c+";max-width:300px;max-height:100px;font-size :35px;");
         contentLayout->addWidget(newLabel);
-        ws::send(body,With);
+        ws::send(body, With);
         input->clear();
     }
+};
+
+// قائمة المحادثات (غير مكتملة حالياً)
+class ChatsMenu : public QMainWindow {
+public:
+    vector<json> cs;
+    ChatsMenu() {
+      
+      
+      
+      
+      topLayout->addWidget(new QLabel("CSC CHAT"));
+        
+        mainLayout->addWidget(menuW);
+        mainLayout->addWidget(chatW);
+        for (auto c : cs) {
+          menuW->addWidget(new QPushButton(c.get<QString>()));
+          connect();
+
+
+       
+        }
+        
+    }
+
+private:
+    void SelectChat(QString&w){
+      chatW->addWidget(new ChatWindow(w));
+      return;
+    }
+    QWidget* menuW=new QWidget;
+    QWidget* chatW=new QWidget;
+    
+    QVBoxLayout* menuV = new QVBoxLayout(this);
+    QHBoxLayout* topLayout = new QHBoxLayout(menuV);
+    
+    QHBoxLayout* mainLayout=new QHBoxLayout(menuV);
+    
+    
+    
+    
+    
+    
+    
+    
     
 };
 
-// ---- نقطة الدخول للتطبيق ----
-#include "main.moc"
+// تضمين ملف MOC
+#include "gui.moc"
 
-int main(int argc, char *argv[]) {
+// ---- نقطة الدخول للتطبيق ----
+int main(int argc, char* argv[]) {
     ws::conn();
     QApplication app(argc, argv);
     ChatWindow window("Ahmad");

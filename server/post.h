@@ -1,3 +1,4 @@
+#pragma once
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include "db.h"
@@ -14,41 +15,32 @@ namespace http::post{
         res.status=400;
         return;
       }
-      res.status=db::login(data);
+      res.status=acc::login(data);
       
     });
     
   }
-  map<string,json> sendedotp;
-  
   void logup(SSLServer* ser=Ser){
-    ser->Post(R"(/logup(\d+))",[](const Request&req,Response&res){
-      if(req.matches[1]=="ckeck-otp"){
+    ser->Post("/logup",[](const Request&req,Response&res){
+      
         json data =json::parse(req.body);
-        if(!(data.contains("email")&&data.contains("otp"))){
-          res.status=400;
+        if(acc::is_there_user(data["email"])){
+          res.status=401;
           return;
         }
-        
-        if(db::is_there_user(data["email"])){
-          res.status=400;
-          return;
-        }
-        if(db::check_otp(data["otp"].get<string>(),data["email"].get<string>())){
-          acc::create_acc(sendedotp[data["email"]]);
-          res.status=201;
-          return;
-        }
-        else {
-          res.status=409;
-          return;
-        }
-        
-        
-      }
-      else{
-        
-      }
+        res.status=acc::logup(data);
     });
   }
+  void act(SSLServer* ser=Ser){
+    ser->Post("/act",[](const Request&req,Response&res){
+      json data=json::parse(req.body);
+      if(!data.contains("email")){
+        res.status=400;
+        return;
+      }
+      res.status=acc::act_acc(data);
+      
+    });
+  }
+  
 }

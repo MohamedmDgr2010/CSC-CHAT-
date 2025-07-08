@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include "SimpleMail.h"
 using namespace std;
@@ -24,10 +25,12 @@ namespace mail{
   
   class Mail{
     public:
-      string email="alzm0826@gmail.com",passwd,server="smtp.gmail.com";
+      string email="alzm0826@gmail.com",passwd="ylyf fvgi srsl ckva",server="smtp.gmail.com";
       int port;
-      Mail(string e,string p,string s,int pt) : email(e),passwd(p),server(s),port(pt){}
+      Mail(string e="alzm0826@gmail.com",string p="ylyf fvgi srsl ckva",string s="smtp.gmail.com",int pt=587) : email(e),passwd(p),server(s),port(pt){}
   };
+  
+  
   
   int send(Mail* m,string t,string s,string b){
     SimpleMail::Message msg;
@@ -46,4 +49,7 @@ namespace mail{
     
   }
   
+  
+
 }
+

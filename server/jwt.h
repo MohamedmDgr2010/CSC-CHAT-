@@ -1,3 +1,4 @@
+#pragma once
 #include <jwt-cpp/jwt.h>
 #include <nlohmann/json.hpp>
 #include <fstream>

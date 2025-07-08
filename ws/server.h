@@ -25,17 +25,17 @@ namespace ws{
           s=new ix::WebSocketServer(port,host);
           s->setOnClientMessageCallback(
     [this](std::shared_ptr<ix::ConnectionState> conn,
-           ix::WebSocket& socket,
+           ix::WebSocket& sock,
            const std::unique_ptr<ix::WebSocketMessage>& msg)
     {
         if (msg->type == ix::WebSocketMessageType::Open)
-            this->on_open(msg, socket,*conn);
+            this->on_open(msg, sock,*conn);
 
         else if (msg->type == ix::WebSocketMessageType::Close)
-            this->on_close(msg, socket);
+            this->on_close(msg, sock);
 
         else if (msg->type == ix::WebSocketMessageType::Message)
-            this->on_msg(msg, socket);
+            this->on_msg(msg, sock);
     }
 );
           s->setOnConnectionCallback([this](std::weak_ptr<ix::WebSocket> weak_socket,
@@ -45,15 +45,16 @@ namespace ws{
     }
 });
        
-        s->start();
-        auto res = s->listen();
+        auto res = s->listen();  // ✅ أولاً الاستماع
 if (!res.first) {
     printf("Failed to listen on port: %s\n", res.second.c_str());
     return;
 }
+
+s->start();  // ✅ بعد ما تم فتح البورت بنجاح
       }
-        void send(ix::WebSocket socket,string msg){
-          socket.send(msg);
+        void send(ix::WebSocket sock,string msg){
+          sock.send(msg);
         }
       
     };
