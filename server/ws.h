@@ -86,9 +86,10 @@ void on_msg(const ix::WebSocketMessagePtr&msg, ix::WebSocket&sock){
 
 bool check_json(string input){
   try{
-    if(json::parse(input))return true;
+    json::parse(input);
+    return true;
     
-    return false;
+    
   }
   catch(json::parse_error&e){
     return false;
