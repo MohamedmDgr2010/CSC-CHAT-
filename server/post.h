@@ -16,6 +16,9 @@ namespace http::post{
         return;
       }
       res.status=acc::login(data);
+      if(res.status==200){
+        res.set_content(acc::gen_jwt(data["email"]), "text/plain");
+      }
       
     });
     
@@ -39,6 +42,9 @@ namespace http::post{
         return;
       }
       res.status=acc::act_acc(data);
+      if(res.status==200){
+        res.set_content(acc::gen_jwt(data["email"]), "text/plain");
+      }
       
     });
   }

@@ -19,7 +19,7 @@ string jwt_pub_key=crypto::load_key("keys/ser/jwt_pub_key.pem");
 
 
 
-
+bool check_json(string input);
 std::map<std::string, std::string> parse_query(const std::string& url_path) {
     map<std::string, std::string> query_map;
 
@@ -52,13 +52,24 @@ std::map<V, K> rm(const std::map<K, V>& fm) {
         sm[v] = k;
     return sm;
 }
-void on_msg(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket){
-  
+void on_msg(const ix::WebSocketMessagePtr&msg, ix::WebSocket&sock){
+  if(msg->str.empty()){
+    std::cerr<<" no msg ";
+    return;
+  }
+  if(!check_json(msg->str)){
+    std::cerr<<"json parse error : vailed json";
+    return;
+    
+  }
   json rm_j=json::parse(msg->str);
   string who;
   
-  if(rm_j.contains("to")&&rm_j.contains("payload")){
-    who=rm(Sockets)[&socket];
+  if(rm_j.contains("to")&&rm_j["to"].is_string()&&rm_j.contains("payload")&&rm_j["payload"].is_string()){
+    if(!Sockets.count(rm_j["to"].get<string>())){
+      return;
+    }
+    who=rm(Sockets)[&sock];
     string rmp=rm_j["payload"].get<string>();
     string smp=crypto::encode(crypto::decode(rmp,msg_pri_key),users_keys[rm_j["to"]]);
     
@@ -67,16 +78,31 @@ void on_msg(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket){
     
     Sockets[rm_j["to"]]->send(sm);
     
-    
+    return;
   }
   
-  
+  sock.send("error");
 }
 
+bool check_json(string input){
+  try{
+    if(json::parse(input))return true;
+    
+    return false;
+  }
+  catch(json::parse_error&e){
+    return false;
+  }
+}
+void on_conn(std::shared_ptr<ix::WebSocket> socket, std::shared_ptr<ix::ConnectionState> conn)
+{
+    cout << "connected" << endl;
 
-void on_conn(shared_ptr<ix::WebSocket> socket,shared_ptr<ix::ConnectionState> conn){
-  cout<<"connected";
-  return;
+    // تعيين دالة استقبال الرسائل خاصة لهذا الاتصال
+    socket->setOnMessageCallback([socket](const ix::WebSocketMessagePtr& msg)
+    {
+        on_msg(msg, *socket);
+    });
 }
 
 void on_open(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket,ix::ConnectionState&conn){
@@ -115,7 +141,7 @@ void on_open(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket,ix::Connect
   
 void WS(){
     ser.on_close=on_close;
-    ser.on_msg=on_msg;
+    //ser.on_msg=on_msg;
     ser.on_open=on_open;
     ser.on_conn=on_conn;
     

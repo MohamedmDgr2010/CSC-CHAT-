@@ -8,8 +8,8 @@
 using namespace std;
 using json=nlohmann::json;
   
-namespace ws
-{shared_ptr<ix::WebSocket> sock =make_shared<ix::WebSocket>();
+namespace ws{
+  shared_ptr<ix::WebSocket> sock =make_shared<ix::WebSocket>();
 
 string pri_key,ser_pub_key;
 
