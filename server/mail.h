@@ -27,27 +27,35 @@ namespace mail{
     public:
       string email="alzm0826@gmail.com",passwd="ylyf fvgi srsl ckva",server="smtp.gmail.com";
       int port;
-      Mail(string e="alzm0826@gmail.com",string p="ylyf fvgi srsl ckva",string s="smtp.gmail.com",int pt=587) : email(e),passwd(p),server(s),port(pt){}
+      Mail(string e="alzm0826@gmail.com",string p="bwaq ngil sfaz rmcm",string s="smtp.gmail.com",int pt=587) : email(e),passwd(p),server(s),port(pt){}
   };
   
   
   
   int send(Mail* m,string t,string s,string b){
     SimpleMail::Message msg;
-    msg.sender=m->email;
-    msg.recipient=t;
-    msg.subject=s;
-    msg.body=b;
-    
-    SimpleMail::SMTPClient c(m->server,m->port);
-    
-    c.username=m->email;
-    c.password=m->passwd;
-    
-    if(c.send(msg))return 201;
-    else return 500;
-    
-  }
+    msg.sender = m->email;
+    msg.recipient = t;
+    msg.subject = s;
+    msg.body = b;
+
+    SimpleMail::SMTPClient c(m->server, m->port);
+    c.username = m->email;
+    c.password = m->passwd;
+
+    // جرب طباعة كل خطوة
+    std::cout << "Connecting to: " << m->server << ":" << m->port << std::endl;
+    std::cout << "Sending from: " << msg.sender << " to " << msg.recipient << std::endl;
+
+    bool result = c.send(msg);
+    if (result) return 201;
+    else {
+        std::cerr << "Failed to send mail." << std::endl;
+        // إذا كانت مكتبة SimpleMail تسمح بإظهار رسالة الخطأ:
+        // std::cerr << c.lastError << std::endl;
+        return 500;
+    }
+}
   
   
 

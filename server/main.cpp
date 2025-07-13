@@ -12,7 +12,7 @@ void Ws(){
 }
 int main(){
   std::cout<<"started app ";
-  
+  acc::send_otp("almzm0826@gmail.com","test");
   std::thread h(https);
   std::thread w(Ws);
   

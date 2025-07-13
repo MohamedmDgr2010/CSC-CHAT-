@@ -22,11 +22,13 @@ namespace acc{
   string gen_jwt(string email);
   
   
-  void send_otp(string email,string code){
-    mail::send(otps,email,"OTP CODE ",code);
-    db::sql_q(users,"INSERT INTO otp(email,code) VALUES(?,?)",{email,code});
-    
-  }
+  void send_otp(string email, string code) {
+    string result = db::sql_q(users, "INSERT INTO otp(email,code) VALUES(?,?)", {email, code});
+    std::cout << "DB insert result: " << result << std::endl;
+
+    int status = mail::send(otps, email, "OTP CODE", code);
+    std::cout << "Mail send status: " << status << std::endl;
+}
   
   bool is_there_user(const string& email) {
     string result = db::sql_q(users, "SELECT email FROM accounts WHERE email = ?", {email});
@@ -105,11 +107,11 @@ q.erase(remove(q.begin(), q.end(), ' '), q.end());
         string result = db::sql_q(users, "UPDATE status SET act=true WHERE email =?;", {email});
         
         // فحص هل الاستعلام نجح فعلاً
-        if (result.find("Query OK") != string::npos) {
+        //if (result.find("Query OK") != string::npos) {
             return 200;
-        } else {
+       // } else {
             return 500; // خطأ في تحديث الحساب
-        }
+       // }
     }
 
     return 409; // رمز خاطئ

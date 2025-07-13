@@ -34,24 +34,36 @@ namespace http::post{
         res.status=acc::logup(data);
     });
   }
-  void act(SSLServer* ser=Ser){
-    ser->Post("/act",[](const Request&req,Response&res){
-      json data=json::parse(req.body);
-      if(!data.contains("email")){
-        res.status=400;
-        return;
-      }
-      int s=acc::act_acc(data);
-      
-      string t=acc::gen_jwt(data["email"].get<string>());
-      if(s==200&&t!="error"){
-        
-        res.status=s;
-        res.set_content(t, "text/plain");
-        
-      }
-      if(t=="error")res.status=500;
+  void act(SSLServer* ser = Ser) {
+    ser->Post("/act", [](const Request& req, Response& res) {
+        try {
+            json data = json::parse(req.body);
+
+            if (!data.contains("email")) {
+                res.status = 400;
+                res.set_content("Missing email", "text/plain");
+                return;
+            }
+
+            int s = acc::act_acc(data);
+            std::string token = acc::gen_jwt(data["email"].get<std::string>());
+
+            if (s == 200 && token != "error") {
+                res.status = 200;
+                res.set_content(token, "text/plain");
+            } else if (token == "error") {
+                res.status = 500;
+                res.set_content("JWT generation failed", "text/plain");
+            } else {
+                res.status = s; // مثلاً لو كانت act_acc ترجع 403
+                res.set_content("Account activation failed", "text/plain");
+            }
+
+        } catch (const std::exception& e) {
+            res.status = 500;
+            res.set_content(std::string("Exception: ") + e.what(), "text/plain");
+        }
     });
+}
   }
   
-}
