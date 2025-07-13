@@ -12,7 +12,7 @@ namespace acc{
   string jwt_pub_key=load_key("keys/ser/jwt_pub_key.pem");
   
   void send_otp(string email,string code);
-  bool is_there_user(string email) ;
+  bool is_there_user(const string& email) ;
   bool check_otp(string code,string &email);
   bool create_acc(json data);
   int login(json data);
@@ -28,11 +28,11 @@ namespace acc{
     
   }
   
-  bool is_there_user(string email) {
+  bool is_there_user(const string& email) {
     string result = db::sql_q(users, "SELECT email FROM accounts WHERE email = ?", {email});
     
-    // إزالة نهاية السطر '\n' إن وجدت
-    result.erase(remove(result.begin(), result.end(), '\n'), result.end());
+    // إزالة الفراغات والمسافات غير المرئية
+    result.erase(remove_if(result.begin(), result.end(), ::isspace), result.end());
 
     return result == email;
 }
@@ -93,7 +93,7 @@ q.erase(remove(q.begin(), q.end(), ' '), q.end());
     // إزالة الفراغات الزائدة أو newlines
     result.erase(remove_if(result.begin(), result.end(), ::isspace), result.end());
 
-    return result == "1";
+    return stoi(result) == 1;
 }
   int act_acc(string email, string code = "") {
     if (code == "") {
@@ -115,13 +115,17 @@ q.erase(remove(q.begin(), q.end(), ' '), q.end());
     return 409; // رمز خاطئ
 }
   string gen_jwt(string email){
-    if(!is_there_user(email)|| !is_activation_acc(email))return "";
+    if(!is_there_user(email)|| !is_activation_acc(email)){
+      cerr<<"Not found or not activation";
+      return "errore";
+      
+    }
     string q;
     q=db::sql_q(users,"SELECT id FROM accounts WHERE email = ? ;",{email});
     q.erase(remove(q.begin(), q.end(), '\n'), q.end());
   q.erase(remove(q.begin(), q.end(), ' '), q.end());
   string id=q;
-  return create_jwt_from_json(json({{"email",email},{"id",id}}),jwt_pri_key);
+  return create_jwt_from_json(json({{"email",email},{"id",id}}),jwt_pri_key,3600);
 
   }
 }

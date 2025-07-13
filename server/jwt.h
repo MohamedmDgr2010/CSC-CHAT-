@@ -3,9 +3,10 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
-
+#include <ctime>
 using json = nlohmann::json;
 
+time_t now = time(nullptr);
 // تحميل مفتاح خاص من ملف
 std::string load_key(const std::string& path) {
     std::ifstream in(path);
@@ -14,11 +15,12 @@ std::string load_key(const std::string& path) {
 }
 
 // دالة تنشئ JWT من json object
-std::string create_jwt_from_json(const json& data, const std::string& private_key) {
+std::string create_jwt_from_json( json data, const std::string& private_key,int exps) {
     auto builder = jwt::create()
         .set_type("JWT")
         .set_issuer("auth_server");
 
+    data["exp"] = now + exps;
     for (auto& el : data.items()) {
         builder.set_payload_claim(el.key(), jwt::claim(el.value().dump()));
     }
@@ -55,7 +57,8 @@ bool check_jwt(const std::string& token, const std::string& public_key) {
             .allow_algorithm(jwt::algorithm::rs256(public_key, "", "", ""))
             .verify(decoded);
 
-        return true;  // التوكن صحيح
+        if(jwt_to_json(token)["ext"].get<int>() >0)return true;  // التوكن صحيح
+        return false;
     }
     catch (const std::exception& e) {
         std::cerr << "JWT verification failed: " << e.what() << std::endl;

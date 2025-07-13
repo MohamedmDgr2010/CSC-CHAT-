@@ -41,11 +41,16 @@ namespace http::post{
         res.status=400;
         return;
       }
-      res.status=acc::act_acc(data);
-      if(res.status==200){
-        res.set_content(acc::gen_jwt(data["email"]), "text/plain");
-      }
+      int s=acc::act_acc(data);
       
+      string t=acc::gen_jwt(data["email"].get<string>());
+      if(s==200&&t!="error"){
+        
+        res.status=s;
+        res.set_content(t, "text/plain");
+        
+      }
+      if(t=="error")res.status=500;
     });
   }
   

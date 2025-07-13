@@ -102,8 +102,11 @@ void on_conn(std::shared_ptr<ix::WebSocket> socket, std::shared_ptr<ix::Connecti
     // تعيين دالة استقبال الرسائل خاصة لهذا الاتصال
     socket->setOnMessageCallback([socket](const ix::WebSocketMessagePtr& msg)
     {
+        
         on_msg(msg, *socket);
     });
+    
+    
 }
 
 void on_open(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket,ix::ConnectionState&conn){
@@ -112,6 +115,7 @@ void on_open(const ix::WebSocketMessagePtr&msg, ix::WebSocket&socket,ix::Connect
     string url=msg->openInfo.uri;
     json headers=msg->openInfo.headers;
     if(!headers.contains("jwt")){
+      socket.send("no tocken ,no connecte");
       socket.close();
       return;
     }

@@ -22,11 +22,16 @@ struct User {
 };
 
 // نافذة الدردشة
-class ChatWindow : public QMainWindow {
+class ChatWindow : public QWidget {
     Q_OBJECT
 
 public:
-    ChatWindow(std::string With, QWidget* parent = nullptr) : QMainWindow(parent) {
+    void Show(QString t) {  // Fixed: QString instead of Qstring
+        if(t.isEmpty()) return;  // Fixed: isEmpty() instead of empty()
+        QLabel* l = new QLabel(t);
+        contentLayout->addWidget(l);
+    }
+    ChatWindow(std::string With, QWidget* parent = nullptr) : QWidget(parent) {
         setupUi(With);
     }
 
@@ -37,8 +42,8 @@ private:
 
     void setupUi(std::string w) {
         With = w;
-        QWidget* centralWidget = new QWidget(this);
-        QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+        // جعل التخطيط الرئيسي لتابع للكلاس نفسه (this)
+        QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
         // --- التخطيط العلوي ---
         QHBoxLayout* topLayout = new QHBoxLayout;
@@ -65,77 +70,137 @@ private:
 
         // --- الإجراء عند الضغط ---
         connect(addButton, &QPushButton::clicked, this, &ChatWindow::onConditionMet);
-
-        centralWidget->setLayout(mainLayout);
-        setCentralWidget(centralWidget);
     }
 
 private slots:
-    void show(Qstring t){
-      if(t.emtpy())return;
-      QLabel* l=new QLabel(t);
-      contentLayout->addWidget(l);
-    }
     void onConditionMet() {
         std::string body = input->text().toStdString();
         if (body.empty()) return;
 
         QLabel* newLabel = new QLabel(QString::fromStdString(body));
-        QString c="blue";
-        
-        newLabel->setStyleSheet("background:"+c+";max-width:300px;max-height:100px;font-size :35px;");
+        QString c = "blue";
+
+        newLabel->setStyleSheet("background:" + c + ";max-width:300px;max-height:100px;font-size:35px;");
         contentLayout->addWidget(newLabel);
         ws::send(body, With);
         input->clear();
     }
 };
+// قائمة المحادثات (مُصححة)
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QPushButton>
 
-// قائمة المحادثات (غير مكتملة حالياً)
-class ChatsMenu : public QMainWindow {
+class ChatsMenu : public QWidget {
+    Q_OBJECT
+
 public:
-    vector<json> cs;
-    ChatsMenu() {
-      
-      
-      
-      
-      topLayout->addWidget(new QLabel("CSC CHAT"));
-        
-        mainLayout->addWidget(menuW);
-        mainLayout->addWidget(chatW);
-        for (auto c : cs) {
-          menuW->addWidget(new QPushButton(c.get<QString>()));
-          connect();
+    ChatsMenu(QWidget* parent = nullptr) : QWidget(parent) {
+        menu = new QVBoxLayout(this);
+        search = new QLineEdit;
+        search->setPlaceholderText("البحث في المحادثات...");
+        menu->addWidget(search);
 
+        loadChats();
 
-       
+        connect(search, &QLineEdit::textChanged, this, &ChatsMenu::filterChats);
+    }
+
+signals:
+    void userSelected(QString user);
+
+private:
+    QVBoxLayout* menu;
+    QLineEdit* search;
+    QVector<QJsonObject> chats;
+
+    void loadChats() {
+        QFile file("chats.json");
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qWarning("تعذر فتح الملف chats.json");
+            return;
         }
-        
+
+        QByteArray data = file.readAll();
+        file.close();
+
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        if (!doc.isArray()) return;
+
+        QJsonArray arr = doc.array();
+        for (const QJsonValue& val : arr) {
+            if (val.isObject()) {
+                QJsonObject obj = val.toObject();
+                chats.append(obj);
+
+                QString name = obj["name"].toString();
+                QPushButton* btn = new QPushButton(name);
+                menu->addWidget(btn);
+
+                // إرسال الإشارة عند الضغط
+                connect(btn, &QPushButton::clicked, this, [=]() {
+                    emit userSelected(name);
+                });
+            }
+        }
+    }
+
+    void filterChats(const QString& text) {
+        // تنفيذ الفلترة حسب النص لاحقًا
+    }
+};
+class MW : public QMainWindow {
+    Q_OBJECT
+
+public:
+    MW(QWidget* parent = nullptr) : QMainWindow(parent) {
+        QWidget* central = new QWidget(this);
+        QVBoxLayout* mainLayout = new QVBoxLayout(central);
+
+        QHBoxLayout* header = new QHBoxLayout;
+        header->addWidget(new QLabel("Welcome"));  // عنوان أعلى
+
+        QHBoxLayout* app = new QHBoxLayout;
+
+        // القائمة الجانبية
+        ChatsMenu* chatsMenu = new ChatsMenu;
+        app->addWidget(chatsMenu);
+
+        // شباك المحادثة (يبدأ فارغ)
+        chatWindow = nullptr;
+        placeholder = new QLabel("No chat selected");
+        placeholder->setAlignment(Qt::AlignCenter);
+        app->addWidget(placeholder);
+
+        mainLayout->addLayout(header);
+        mainLayout->addLayout(app);
+
+        central->setLayout(mainLayout);
+        setCentralWidget(central);
+
+        // عند الضغط على مستخدم في القائمة
+        connect(chatsMenu, &ChatsMenu::userSelected, this, &MW::openChat);
+    }
+
+private slots:
+    void openChat(QString user) {
+        if (chatWindow != nullptr) {
+            placeholder->hide();
+            layout()->removeWidget(chatWindow);
+            delete chatWindow;
+            chatWindow = nullptr;
+        }
+
+        chatWindow = new ChatWindow(user.toStdString());
+        layout()->addWidget(chatWindow);
     }
 
 private:
-    void SelectChat(QString&w){
-      chatW->addWidget(new ChatWindow(w));
-      return;
-    }
-    QWidget* menuW=new QWidget;
-    QWidget* chatW=new QWidget;
-    
-    QVBoxLayout* menuV = new QVBoxLayout(this);
-    QHBoxLayout* topLayout = new QHBoxLayout(menuV);
-    
-    QHBoxLayout* mainLayout=new QHBoxLayout(menuV);
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    ChatWindow* chatWindow;
+    QLabel* placeholder;
 };
-
 // تضمين ملف MOC
 #include "gui.moc"
 
@@ -143,7 +208,8 @@ private:
 int main(int argc, char* argv[]) {
     ws::conn();
     QApplication app(argc, argv);
-    ChatWindow window("Ahmad");
+    
+    MW window;
     window.show();
     return app.exec();
 }
