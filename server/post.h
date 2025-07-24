@@ -17,7 +17,7 @@ namespace http::post{
       }
       res.status=acc::login(data);
       if(res.status==200){
-        res.set_content(acc::gen_jwt(data["email"]), "text/plain");
+        res.set_header("Set-Cookie", "session=" + acc::gen_jwt(data["email"]) + "; Path=/; HttpOnly; Secure; SameSite=Strict");
       }
       
     });
@@ -50,7 +50,9 @@ namespace http::post{
 
             if (s == 200 && token != "error") {
                 res.status = 200;
-                res.set_content(token, "text/plain");
+                if(res.status==200){
+        res.set_header("Set-Cookie", "session=" + acc::gen_jwt(data["email"]) + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+      }
             } else if (token == "error") {
                 res.status = 500;
                 res.set_content("JWT generation failed", "text/plain");

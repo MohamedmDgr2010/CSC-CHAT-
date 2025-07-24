@@ -9,7 +9,7 @@ using json=nlohmann::json;
 map<string,ix::WebSocket*> Sockets;
 map<string,string> users_keys,tockens;
 map<string,ix::ConnectionState*> Connections;
-ws::server::Server ser;
+ws::server::SSLServer ser(2024,"cert.pem","key.pem");
 
 
 string msg_pri_key=crypto::load_key("keys/ser/msg_pri_key.pem"),

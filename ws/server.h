@@ -22,7 +22,7 @@ namespace ws{
         ix::WebSocketServer* s;
         void start(int port,string host){
         
-          s=new ix::WebSocketServer(port,host);
+        //  s=new ix::WebSocketServer(port,host);
           s->setOnClientMessageCallback(
     [this](std::shared_ptr<ix::ConnectionState> conn,
            ix::WebSocket& sock,
@@ -57,6 +57,17 @@ s->start();  // ✅ بعد ما تم فتح البورت بنجاح
           sock.send(msg);
         }
       
+    };
+    class SSLServer : public Server{
+      public:
+        SSLServer(int por,string c,string k){
+          s=new ix::WebSocketServer(por);
+          ix::SocketTLSOptions opts;
+          opts.certFile = c;
+          opts.keyFile = k;
+
+          s->setTLSOptions(opts);
+      }
     };
   }
 }
